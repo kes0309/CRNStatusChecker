@@ -19,7 +19,7 @@
 
 ## 프로그램 사용 방법
 ### 서비스 키
-1. 로그인 후 [공공데이터포털 마이페이지](https://www.data.go.kr/iim/api/selectDevAcountList.do)에서 승인된 "국세청_사업자등록정보 진위확인 및 상태조회 서비스" 페이지 접속
+1. [공공데이터포털](https://www.data.go.kr/) 로그인 후 [마이페이지](https://www.data.go.kr/iim/api/selectDevAcountList.do)에서 승인된 "국세청_사업자등록정보 진위확인 및 상태조회 서비스" 페이지 접속
 2. 일반인증키 (Encoding) 전체 복사
 3. 서비스 키 입력란에 붙여넣은 뒤 "서비스키 저장" 버튼 누르기
 
