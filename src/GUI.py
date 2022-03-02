@@ -2,6 +2,7 @@ from tkinter import Tk, Label, Frame, Entry, Button, StringVar
 from tkinter import filedialog as fd
 from tkinter.messagebox import showinfo
 
+
 from Logic import read_service_key, save_service_key, check_CRN_status
 
 # Create Main Window
@@ -154,7 +155,7 @@ output_dir_button.grid(row=2, column=2)
 def checkStatus():
     inputTarget = input_dir_label.cget("text")
     outputTarget = output_dir_label.cget("text")
-    serviceKey = service_key.get()
+    serviceKey = read_service_key()
 
     if (serviceKey == ""):
         showinfo(
