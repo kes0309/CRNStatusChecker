@@ -82,7 +82,7 @@ def select_input():
 
     filename = fd.askopenfilename(
         title='사업자등록번호 파일 선택',
-        initialdir='./',
+        initialdir='/',
         filetypes=filetypes)
 
     input_dir_label.config(text=filename)
