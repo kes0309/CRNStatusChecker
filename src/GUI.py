@@ -136,7 +136,7 @@ def select_output():
 
 output_dir_button = Button(
     root,
-    text='출력 폴더 선택',
+    text='저장 폴더 선택',
     command=select_output,
     padx=10
 )
