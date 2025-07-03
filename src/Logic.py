@@ -1,6 +1,7 @@
 import requests
 import pandas as pd
 from styleframe import StyleFrame
+from datetime import datetime  # 날짜 포맷 변환용
 
 
 def read_service_key():
@@ -29,11 +30,10 @@ def check_CRN_status(service_key, input_dir, output_dir):
         CRNList = inputDF["사업자등록번호"].values.tolist()
     except:
         return '사업자등록번호가 적힌 엑셀 열 첫번째 행에 "사업자등록번호" 제목 입력 후 다시 시도해주세요'
+
     CRNStringList = list(map(str, CRNList))
 
-    # 공공데이터포털 OpenAPI
-    # 국세청 관리
-    # Documentation: https://www.data.go.kr/data/15081808/openapi.do
+    # 국세청 사업자등록상태 API
     url = "http://api.odcloud.kr/api/nts-businessman/v1/status?serviceKey=" + service_key
 
     maxChunkSize = 100
@@ -43,6 +43,7 @@ def check_CRN_status(service_key, input_dir, output_dir):
     resultCRNList = []
     resultCRNStatus = []
     resultCRNTaxType = []
+    resultCRNEndDate = []  # 폐업일자 리스트
 
     for CRNChunk in CRNChunks:
         body = {"b_no": CRNChunk}
@@ -51,8 +52,8 @@ def check_CRN_status(service_key, input_dir, output_dir):
         except requests.exceptions.RequestException:
             return "인터넷 연결을 확인하세요"
 
-        if (response.status_code != 200):
-            if (response.status_code == 400):
+        if response.status_code != 200:
+            if response.status_code == 400:
                 return "유효한 서비스키를 입력 후 저장하세요"
             else:
                 return "국세청 서버 오류: 잠시 후 다시 시도해주세요"
@@ -60,23 +61,30 @@ def check_CRN_status(service_key, input_dir, output_dir):
         responseJSON = response.json()["data"]
 
         for entry in responseJSON:
-            taxType = entry["tax_type"]
+            taxType = entry.get("tax_type", "")
             if taxType == "국세청에 등록되지 않은 사업자등록번호입니다.":
                 taxType = "국세청에 등록되지 않음"
 
-            status = entry["b_stt"]
+            status = entry.get("b_stt", "-")
 
-            if (status == ""):
-                status = "-"
+            # 폐업일 변환 처리
+            endDate = entry.get("end_dt", "")
+            if endDate:
+                try:
+                    endDate = datetime.strptime(endDate, "%Y%m%d").strftime("%Y-%m-%d")
+                except ValueError:
+                    pass  # 변환 실패 시 원래 값 그대로 사용
 
             resultCRNList.append(entry["b_no"])
             resultCRNStatus.append(status)
             resultCRNTaxType.append(taxType)
+            resultCRNEndDate.append(endDate)
 
     output = {
         "사업자등록번호": resultCRNList,
         "납세자상태": resultCRNStatus,
-        "과세유형": resultCRNTaxType
+        "과세유형": resultCRNTaxType,
+        "폐업일": resultCRNEndDate  # 엑셀 출력용
     }
 
     outputDF = pd.DataFrame(output)
@@ -84,7 +92,7 @@ def check_CRN_status(service_key, input_dir, output_dir):
     excel_writer = StyleFrame.ExcelWriter(output_dir + '/사업자상태.xlsx')
     sf = StyleFrame(outputDF)
     sf.to_excel(excel_writer=excel_writer, best_fit=[
-                "사업자등록번호", "납세자상태", "과세유형"], row_to_add_filters=0)
+        "사업자등록번호", "납세자상태", "과세유형", "폐업일"], row_to_add_filters=0)
     excel_writer.save()
 
     return ""
